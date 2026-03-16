@@ -1,0 +1,8 @@
+{
+  "name": "jailex-x-bot",
+  "version": "1.0.0",
+  "description": "Autonomous X Bot for Jailex.net",
+  "dependencies": {
+    "twitter-api-v2": "^1.15.0"
+  }
+}
