@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Jailex.net Hype Bot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050914;
+            --blue: #00E5FF;
+            --bears: #C83803;
+            --glassBorder: rgba(0, 229, 255, 0.15);
+            --glassBg: rgba(255, 255, 255, 0.03);
+            --inputBg: rgba(0, 0, 0, 0.45);
+            --xColor: #1DA1F2;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            background-image: radial-gradient(circle at 50% -20%, rgba(0, 229, 255, 0.15), transparent 60%);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--glassBorder);
+        }
+
+        .header h1 {
+            color: var(--blue);
+            text-shadow: 0 0 10px var(--blue);
+            letter-spacing: 2px;
+        }
+
+        .glass-card {
+            background: var(--glassBg);
+            border: 1px solid var(--glassBorder);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 18px;
+        }
+
+        .glass-card .title {
+            color: var(--blue);
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        input[type="text"], input[type="password"], textarea {
+            width: 100%;
+            background: var(--inputBg);
+            border: 1px solid var(--glassBorder);
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            outline: none;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            background: transparent;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            padding: 14px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        button:hover { background: rgba(255,255,255,0.1); }
+        
+        .btn-blue { border: 2px solid var(--blue); color: var(--blue); }
+        .btn-bears { border: 2px solid var(--bears); color: var(--bears); }
+        .btn-x { border: 2px solid var(--xColor); color: var(--xColor); }
+
+        .post-preview {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px dashed var(--bears);
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 100px;
+            margin-bottom: 15px;
+            font-family: sans-serif; /* Standard font for better tweet readability */
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .status-log {
+            font-family: monospace;
+            font-size: 12px;
+            color: #53FC18;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 8px;
+            height: 150px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>JAILEX X-BOT ENGINE</h1>
+        <p style="color: rgba(255,255,255,0.5); font-size: 12px; margin-top: 5px;">GROQ AI TEXT GENERATOR</p>
+    </div>
+
+    <div class="glass-card">
+        <div class="title">1. ENGINE CONFIGURATION</div>
+        <input type="password" id="groqKey" placeholder="GROQ API KEY (gsk_...)">
+        <textarea id="aiPrompt" rows="3" placeholder="SYSTEM PROMPT (e.g., You are a hype bot for Jailex.net...)">You are an energetic, hype-focused social media manager for a new streaming platform called Jailex. Write a short, engaging X (Twitter) post promoting the website 'jailex.net'. Keep it under 250 characters. Use relevant hashtags. Do not use quotes around the tweet.</textarea>
+        <button class="btn-blue" onclick="saveConfig()">SAVE CONFIGURATION</button>
+    </div>
+
+    <div class="glass-card">
+        <div class="title">2. GENERATE & POST</div>
+        <button class="btn-bears" onclick="generateTweet()">1. GENERATE HYPE TWEET (GROQ)</button>
+        
+        <div class="post-preview" id="tweetPreview">
+            Awaiting generation...
+        </div>
+
+        <button class="btn-x" id="postBtn" onclick="postToX()" disabled style="opacity: 0.5;">2. PUSH TO X</button>
+    </div>
+
+    <div class="glass-card">
+        <div class="title">SYSTEM LOG</div>
+        <div class="status-log" id="sysLog">
+            [SYS] HYPE BOT INITIALIZED.<br>
+            [SYS] WAITING FOR GROQ API KEY...
+        </div>
+    </div>
+
+    <script>
+        window.onload = () => {
+            document.getElementById('groqKey').value = localStorage.getItem('jailex_xbot_groq') || '';
+            const savedPrompt = localStorage.getItem('jailex_xbot_prompt');
+            if (savedPrompt) document.getElementById('aiPrompt').value = savedPrompt;
+        };
+
+        function logMsg(msg) {
+            const log = document.getElementById('sysLog');
+            log.innerHTML += `<br>[SYS] ${msg}`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function saveConfig() {
+            localStorage.setItem('jailex_xbot_groq', document.getElementById('groqKey').value.trim());
+            localStorage.setItem('jailex_xbot_prompt', document.getElementById('aiPrompt').value.trim());
+            logMsg("CONFIGURATION SAVED SECURELY TO BROWSER.");
+        }
+
+        async function generateTweet() {
+            const key = document.getElementById('groqKey').value.trim();
+            const prompt = document.getElementById('aiPrompt').value.trim();
+            const preview = document.getElementById('tweetPreview');
+            const postBtn = document.getElementById('postBtn');
+
+            if (!key) {
+                logMsg("ERROR: GROQ API KEY MISSING.");
+                return;
+            }
+
+            logMsg("CONTACTING GROQ LLAMA-3.1-8B...");
+            preview.innerText = "Generating hype...";
+            postBtn.disabled = true;
+            postBtn.style.opacity = "0.5";
+
+            try {
+                const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${key}`, 
+                        'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify({
+                        model: "llama-3.1-8b-instant",
+                        messages: [
+                            {role: "system", content: prompt}, 
+                            {role: "user", content: "Write the next promotional tweet right now."}
+                        ],
+                        max_tokens: 100,
+                        temperature: 0.8
+                    })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    let reply = data.choices[0].message.content.trim();
+                    
+                    // Clean up potential unwanted characters from AI
+                    reply = reply.replace(/^"|"$/g, ''); 
+                    
+                    preview.innerText = reply;
+                    logMsg("TWEET GENERATED SUCCESSFULLY.");
+                    
+                    // Enable X Button
+                    postBtn.disabled = false;
+                    postBtn.style.opacity = "1";
+                } else {
+                    const err = await res.json();
+                    logMsg(`GROQ ERROR: ${err.error.message}`);
+                    preview.innerText = "Generation failed. Check logs.";
+                }
+            } catch(e) {
+                logMsg(`NETWORK ERROR: ${e.message}`);
+                preview.innerText = "Generation failed. Check logs.";
+            }
+        }
+
+        function postToX() {
+            const tweetText = document.getElementById('tweetPreview').innerText;
+            if (!tweetText || tweetText === "Awaiting generation...") return;
+            
+            logMsg("LAUNCHING X WEB INTENT...");
+            
+            // This encodes the text so it can safely be passed in a URL
+            const encodedTweet = encodeURIComponent(tweetText);
+            
+            // Opens X with the tweet pre-filled
+            window.open(`https://twitter.com/intent/tweet?text=${encodedTweet}`, '_blank');
+        }
+    </script>
+</body>
+</html>
